@@ -8,10 +8,10 @@ const generateAccessToken = async (userId) => {
     const user = await User.findById(userId);
     const accessToken = user.generateAccesToken();
 
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+    // user.refreshToken = refreshToken;
+    // await user.save({ validateBeforeSave: false });
 
-    return { accessToken, refreshToken };
+    return { accessToken };
   } catch (error) {
     throw new ApiError(500, "Something went wrong while generating Token");
   }
@@ -70,7 +70,7 @@ const logInUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Password is incorrect");
   }
 
-  const { accessToken, refreshToken } =
+  const { accessToken } =
     await generateAccessToken(isUserExist._id);
 
   const loggedInUser = await User.findById(isUserExist._id).select(
@@ -85,10 +85,10 @@ const logInUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .cookie("accesToken", accessToken, option)
-    .cookie("refreshToken", refreshToken, option)
+    // .cookie("refreshToken", refreshToken, option)
     .json(
       new ApiResponse(200, {
-        user:logInUser,accessToken,refreshToken
+        user:logInUser,accessToken
       },"User logged In succed")
     )
 
@@ -99,7 +99,7 @@ await User.findByIdAndUpdate(
   req.user._id,
   {
     $set:{
-      refreshToken:undefined
+      accessToken:undefined
     }
   },
   {
@@ -114,7 +114,7 @@ const option = {
 return res
 .status(200)
 .clearCookie("accesToken",option)
-.clearCookie("refreshToken",option)
+// .clearCookie("refreshToken",option)
 .json(new ApiResponse(200, "User Logged out"))
 
 
