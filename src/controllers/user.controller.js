@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiErrors.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { userAttend } from "../models/userAttendecedetail.model.js";
 
 const generateAccessToken = async (userId) => {
   try {
@@ -94,6 +95,7 @@ const logInUser = asyncHandler(async (req, res) => {
 
 });
 
+// User LogOut
 const logOutUser = asyncHandler(async(req,res)=>{
 await User.findByIdAndUpdate(
   req.user._id,
@@ -117,10 +119,35 @@ return res
 // .clearCookie("refreshToken",option)
 .json(new ApiResponse(200, "User Logged out"))
 
-
-
 })
 
+// USer attendece 
+
+const userAttendController = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findById(req.body.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const attendanceRecord = new userAttend({
+      user: user._id,
+      dateTime: {
+        dateTime: req.body.dateTime.date,
+        present: req.body.dateTime.present,
+        absent: req.body.dateTime.absent,
+        leave: req.body.dateTime.leave,
+        inTime: req.body.dateTime.inTime,
+        outTime: req.body.dateTime.outTime
+      }
+    });
+
+    await attendanceRecord.save();
+    res.status(200).json(new ApiResponse(200," Your attendance record has been successfully updated..." ));
+  } catch (error) {
+    res.status(500).json(new ApiError(500, "Error: Unable to update attendance. Please try again later..."));
+  }
+});
 
 
-export { regesterUser, logInUser ,logOutUser};
+export { regesterUser, logInUser ,logOutUser,userAttendController};

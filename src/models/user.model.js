@@ -30,21 +30,6 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-    },
-    present:{
-      type: Boolean
-    },
-    absent:{
-      type:Boolean
-    },
-    leave:{
-      type :Boolean
-    },
-    inTime:{
-      type :String
-    },
-    outTime:{
-      type:String
     }
   },
   { timestamps: true }
