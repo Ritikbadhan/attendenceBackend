@@ -3,6 +3,8 @@ import { ApiError } from "../utils/apiErrors.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { userAttend } from "../models/userAttendecedetail.model.js";
+import jwt from "jsonwebtoken";
+
 
 const generateAccessToken = async (userId) => {
   try {
@@ -52,6 +54,26 @@ const regesterUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "User created succesed"));
 });
 
+// Forgot password
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email, username, password } = req.body;
+
+  if (!(username || email)) {
+    throw new ApiError(400, "Username or Email is required");
+  }
+
+  const user = await User.findOne({ $or: [{ email }, { username }] });
+  if (!user) {
+    throw new ApiError(404, "User does not exist");
+  }
+
+  // Update the user's password
+  user.password = password;
+  await user.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, "Password Changed"));
+});
+
 
 // User Login
 const logInUser = asyncHandler(async (req, res) => {
@@ -75,7 +97,7 @@ const logInUser = asyncHandler(async (req, res) => {
     await generateAccessToken(isUserExist._id);
 
   const loggedInUser = await User.findById(isUserExist._id).select(
-    "-password -refreshToken"
+    "-password"
   );
 
   const option = {
@@ -86,7 +108,6 @@ const logInUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .cookie("accesToken", accessToken, option)
-    // .cookie("refreshToken", refreshToken, option)
     .json(
       new ApiResponse(200, {
         user:logInUser,accessToken
@@ -149,5 +170,40 @@ const userAttendController = asyncHandler(async (req, res) => {
   }
 });
 
+// Update profile
+const updateProfile = asyncHandler(async (req, res) => {
+  const { email, username ,fullName} = req.body;
 
-export { regesterUser, logInUser ,logOutUser,userAttendController};
+  const token =
+    req.cookies?.access_token ||
+    req.headers["authorization"]?.replace("Bearer ", "");
+    if (!token) {
+      throw new ApiError(401, "Unauthorized");
+    }
+  
+    const deCodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  
+    const user = await User.findById(deCodedToken?._id)
+
+  if (!user) {
+    throw new ApiError(404, "User does not exist");
+  }
+
+  // Update the user's password
+  if (email) {
+    user.email = email;
+  }
+  if (username) {
+    user.username = username;
+  }
+  if (fullName) {
+    user.fullName = fullName;
+  }
+
+  await user.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, `${email ? "Email" : null || username ? "Username" : null || fullName ? "Name" : null} has changed`))
+});
+
+
+export { regesterUser, logInUser ,logOutUser,userAttendController,forgotPassword, updateProfile};
