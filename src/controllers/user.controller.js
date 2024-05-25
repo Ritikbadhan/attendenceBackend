@@ -205,5 +205,19 @@ const updateProfile = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, `${email ? "Email" : null || username ? "Username" : null || fullName ? "Name" : null} has changed`))
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  // Fetch all users from the database
+  const users = await User.find().select('-password'); // Exclude the password field
 
-export { regesterUser, logInUser ,logOutUser,userAttendController,forgotPassword, updateProfile};
+  // Construct the custom message
+  const message = 
+    (req.body.email ? "Email" : null) || 
+    (req.body.username ? "Username" : null) || 
+    (req.body.fullName ? "Name" : null) || 
+    "No changes";
+
+  // Return the response with the users and the custom message
+  return res.status(200).json(new ApiResponse(200, users, `${message} has changed`));
+});
+
+export { regesterUser, logInUser ,logOutUser,userAttendController,forgotPassword, updateProfile, getAllUsers};

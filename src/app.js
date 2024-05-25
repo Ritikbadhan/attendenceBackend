@@ -17,8 +17,11 @@ app.use(express.static("public"))
 // Routes import
 
 import userRouter from './routes/user.routs.js'
+import adminRouter from './routes/admin.routs.js'
 
 // Route Declartion
 app.use("/api/v1/users", userRouter)
+app.use("/api/v1/admin", adminRouter)
+
 
 export {app}
